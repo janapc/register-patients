@@ -1,0 +1,98 @@
+service: register-patients
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: us-east-1
+  environment:
+    PATIENTS_TABLE: 'PATIENTS-${opt:stage, self:provider.stage}'
+  iam:
+    role:
+      statements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:Scan
+          - dynamodb:PutItem
+          - dynamodb:DeleteItem
+          - dynamodb:GetItem
+          - dynamodb:UpdateItem
+        Resource: 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.PATIENTS_TABLE}'
+
+package:
+  exclude:
+    - ./db/offline/**
+    - ./.dynamodb/**
+
+custom:
+  dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8000
+      inMemory: true
+      heapInitial: 200m
+      heapMax: 1g
+      migrate: true
+      seed: true
+      convertEmptyValues: true
+    seed:
+      domain:
+        sources:
+          - table: ${self:provider.environment.PATIENTS_TABLE}
+            sources: [./db/offline/patients-seed.json]
+
+resources:
+  Resources:
+    PatientsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.PATIENTS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+plugins:
+  - serverless-offline
+  - serverless-dynamodb-local
+
+functions:
+  listPatients:
+    handler: functions/listPatients.handler
+    events:
+      - http:
+          path: patients
+          method: get
+  getPatient:
+    handler: functions/getPatient.handler
+    events:
+      - http:
+          path: patients/{patientId}
+          method: get
+  createPatient:
+    handler: functions/createPatient.handler
+    events:
+      - http:
+          path: patients
+          method: post
+  updatePatient:
+    handler: functions/updatePatient.handler
+    events:
+      - http:
+          path: patients/{patientId}
+          method: put
+  deletePatient:
+    handler: functions/deletePatient.handler
+    events:
+      - http:
+          path: patients/{patientId}
+          method: delete

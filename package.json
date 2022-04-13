@@ -1,0 +1,25 @@
+{
+  "name": "register-patients",
+  "version": "1.0.0",
+  "description": "This API is a manager of registers of patients",
+  "main": "./functions/listPatients.js",
+  "scripts": {
+    "offline": "sls offline start",
+    "deploy:dev": "sls deploy --stage dev"
+  },
+  "keywords": [],
+  "author": "Janaina Pedrina",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/janapc/register-patients/issues"
+  },
+  "homepage": "https://github.com/janapc/register-patients",
+  "dependencies": {
+    "aws-sdk": "^2.1113.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "serverless-dynamodb-local": "^0.2.40",
+    "serverless-offline": "^8.5.0"
+  }
+}
